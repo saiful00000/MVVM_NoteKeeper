@@ -1,29 +1,33 @@
 package com.example.mvvmnotekeeper.adapters;
 
 import android.content.Context;
-import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mvvmnotekeeper.R;
+import com.example.mvvmnotekeeper.interfaces.ItemClick;
 import com.example.mvvmnotekeeper.models.Note;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteListViewHolder> {
 
+    private ItemClick itemClickCallback;
     private Context context;
-    private List<Note> notes = new ArrayList<>();
+    private List<Note> notes;
 
+
+    public NoteListAdapter(Context context, List<Note> notes,ItemClick itemClickCallback) {
+        this.context = context;
+        this.notes = notes;
+        this.itemClickCallback = itemClickCallback;
+    }
 
     @NonNull
     @Override
@@ -39,16 +43,15 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteLi
     public void onBindViewHolder(@NonNull NoteListViewHolder holder, final int position) {
 
         Note note = notes.get(position);
+        int priority = note.getPriority();
 
+        if (priority < 2){
+            holder.deleteBtn.setImageResource(R.drawable.ic_baseline_priority_green_high_24);
+        } else if (priority == 3) {
+            holder.deleteBtn.setImageResource(R.drawable.ic_baseline_priority_yelow_high_24);
+        }
         holder.titleTv.setText(note.getTitle());
         holder.bodyTv.setText(note.getBody());
-        holder.deleteBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(context, Integer.toString(position), Toast.LENGTH_SHORT).show();
-                Log.i("adapter", Integer.toString(position));
-            }
-        });
 
     }
 
@@ -57,7 +60,7 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteLi
         return notes.size();
     }
 
-    public static class NoteListViewHolder extends RecyclerView.ViewHolder {
+    public class NoteListViewHolder extends RecyclerView.ViewHolder {
 
         TextView titleTv;
         TextView bodyTv;
@@ -70,6 +73,14 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteLi
             bodyTv = itemView.findViewById(R.id.body_textview_id);
             deleteBtn = itemView.findViewById(R.id.delete_btn_id);
 
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    itemClickCallback.onItemClick(notes.get(position));
+                }
+            });
+
         }
     }
 
@@ -77,6 +88,10 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteLi
     public void setNotes(List<Note> notes) {
         this.notes = notes;
         notifyDataSetChanged();
+    }
+
+    public Note getNoteAt(int i) {
+        return notes.get(i);
     }
 
     public void setContext(Context context) {
